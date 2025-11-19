@@ -29,6 +29,35 @@
             transition: opacity 1.5s ease-in-out;
             background-color: black;
         }
+
+        /* Quiz Option Buttons */
+        .quiz-btn {
+            background-color: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            color: #334155;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .quiz-btn:hover {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+        .quiz-btn.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #15803d;
+        }
+        .quiz-btn.wrong {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
     </style>
 </head>
 <body>
@@ -36,14 +65,12 @@
     <!-- 3D Canvas -->
     <div id="canvas-container"></div>
 
-    <!-- Video Overlay (Initially Hidden) -->
+    <!-- Video Overlay -->
     <div id="video-overlay" class="absolute inset-0 z-50 hidden-custom flex flex-col items-center justify-center opacity-0">
         <video id="victory-video" class="w-full h-full object-contain" playsinline>
-            <!-- 建議將影片檔名改為英文，例如 victory.mp4，以避免 GitHub Pages 無法讀取中文檔名的問題 -->
             <source src="./victory.mp4" type="video/mp4">
-            您的瀏覽器不支援影片播放，請確認影片檔案是否在同一資料夾中。
+            您的瀏覽器不支援影片播放。
         </video>
-        <!-- Replay Button (appears over video) -->
         <button onclick="location.reload()" class="absolute bottom-10 right-10 bg-white/20 hover:bg-white/40 text-white font-bold py-3 px-8 rounded-full backdrop-blur-md transition border border-white/30 hover:scale-105">
             🔄 再玩一次
         </button>
@@ -51,16 +78,11 @@
 
     <!-- UI Layer -->
     <div id="ui-layer" class="absolute top-0 left-0 w-full h-full pointer-events-none flex flex-col justify-between p-2 md:p-4 z-10 transition-opacity duration-1000">
-        
-        <!-- Top Header Area -->
         <div class="flex flex-col md:flex-row justify-between items-start pointer-events-auto gap-2 w-full">
-            <!-- Title Box -->
             <div class="glass-panel p-3 md:p-4 max-w-[90%] md:max-w-md shadow-lg">
                 <h1 class="text-lg md:text-2xl font-bold text-blue-800 mb-1">🌊 GPGP 海洋環保大冒險</h1>
-                <p class="text-xs md:text-sm text-slate-600 hidden md:block">雙人對戰：紅色避開微塑膠，綠色尋找環保行動，黃色學習冷知識！</p>
+                <p class="text-xs md:text-sm text-slate-600 hidden md:block">雙人對戰：紫色格子觸發「機會與命運」問答！</p>
             </div>
-
-            <!-- Score Box -->
             <div class="glass-panel p-2 md:p-3 flex flex-row md:flex-col gap-3 md:gap-1 shadow-lg self-end md:self-auto">
                 <div class="flex items-center gap-2">
                     <div class="w-3 h-3 md:w-4 md:h-4 rounded-full bg-red-500 shadow-sm border border-white"></div>
@@ -73,267 +95,227 @@
             </div>
         </div>
 
-        <!-- Bottom Controls Area -->
         <div class="pointer-events-auto w-full flex justify-center md:justify-end md:absolute md:bottom-6 md:right-6 pb-4 md:pb-0">
             <div class="glass-panel p-3 md:p-5 flex flex-row md:flex-col items-center gap-3 md:gap-4 shadow-xl transform transition-all">
-                
-                <!-- Turn Indicator -->
                 <div id="turn-indicator" class="text-sm md:text-base font-bold text-red-600 bg-red-100 px-4 py-2 rounded-full whitespace-nowrap border border-red-200">
                     換 玩家 1
                 </div>
-
-                <!-- Roll Button -->
                 <button id="roll-btn" class="action-btn bg-gradient-to-r from-blue-600 to-blue-400 active:from-blue-700 active:to-blue-600 text-white font-bold rounded-full shadow-lg shadow-blue-500/30 flex items-center gap-2 px-6 py-3 md:px-8 md:py-3 text-lg md:text-xl">
                     🎲 <span class="hidden md:inline">擲骰子</span><span class="md:hidden">GO!</span>
                 </button>
-
-                <!-- Dice Result Display -->
-                <div id="dice-result" class="text-xl md:text-2xl font-bold text-slate-800 min-w-[3rem] text-center">
-                    -
-                </div>
+                <div id="dice-result" class="text-xl md:text-2xl font-bold text-slate-800 min-w-[3rem] text-center">-</div>
             </div>
         </div>
     </div>
 
-    <!-- Fact Modal -->
-    <div id="fact-modal" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-auto hidden-custom z-50 px-4">
+    <!-- Modal (Combined Fact/Quiz) -->
+    <div id="info-modal" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center pointer-events-auto hidden-custom z-50 px-4">
         <div class="glass-panel p-6 md:p-8 w-full max-w-sm md:max-w-lg text-center transform transition-all shadow-2xl border-2 border-white/50">
             <div id="modal-icon" class="text-5xl md:text-6xl mb-4 animate-bounce">⚠️</div>
-            <h2 id="modal-title" class="text-xl md:text-2xl font-bold mb-3 text-slate-800">遇見 GPGP!</h2>
-            <p id="modal-desc" class="text-base md:text-lg text-slate-600 mb-6 leading-relaxed">這裡是太平洋垃圾帶...</p>
-            <button onclick="closeModal()" class="action-btn bg-slate-800 text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-slate-700 w-full md:w-auto shadow-lg">
+            <h2 id="modal-title" class="text-xl md:text-2xl font-bold mb-3 text-slate-800">標題</h2>
+            <p id="modal-desc" class="text-base md:text-lg text-slate-600 mb-6 leading-relaxed">內容...</p>
+            
+            <!-- Quiz Area (Hidden by default) -->
+            <div id="quiz-options" class="hidden-custom flex flex-col gap-2 w-full mb-4">
+                <!-- Buttons injected by JS -->
+            </div>
+
+            <button id="modal-close-btn" onclick="closeModal()" class="action-btn bg-slate-800 text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-slate-700 w-full md:w-auto shadow-lg">
                 了解了！
             </button>
         </div>
     </div>
 
-    <!-- Win Notification (Temporary Toast) -->
+    <!-- Win Toast -->
     <div id="win-toast" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center justify-center hidden-custom z-50 transition-all duration-500">
         <div class="glass-panel p-6 md:p-10 text-center shadow-2xl border-4 border-yellow-300 bg-white/95">
             <div class="text-6xl md:text-7xl mb-4 animate-pulse">🏆</div>
             <h2 id="winner-text" class="text-3xl md:text-4xl font-bold text-blue-600 mb-2">玩家 1 獲勝！</h2>
-            <p class="text-lg text-slate-600 font-bold">愛心熱氣球來接你了！準備升空！🎈</p>
+            <p class="text-lg text-slate-600 font-bold">愛心熱氣球來接你了！🎈</p>
         </div>
     </div>
 
     <script>
         // --- Sound System ---
         let audioCtx = null;
-
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         }
-
+        function playTone(freq, type, duration, startTime) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(startTime);
+            gain.gain.setValueAtTime(0.1, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+            osc.stop(startTime + duration);
+        }
         function playMoveSound(playerId) {
             if (!audioCtx) return;
-
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
             const now = audioCtx.currentTime;
-
-            if (playerId === 1) {
-                // Player 1 (Red): Higher pitched "Biu" or "Boing"
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(600, now);
-                oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.1);
-                
-                gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                
-                oscillator.start(now);
-                oscillator.stop(now + 0.15);
-            } else {
-                // Player 2 (Blue): Lower, bubbly "Poy"
-                oscillator.type = 'triangle'; // Softer shape
-                oscillator.frequency.setValueAtTime(400, now);
-                oscillator.frequency.linearRampToValueAtTime(500, now + 0.1);
-                
-                gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                
-                oscillator.start(now);
-                oscillator.stop(now + 0.15);
+            if (playerId === 1) { // Red: High ping
+                playTone(600, 'sine', 0.15, now);
+            } else { // Blue: Bubbly
+                playTone(400, 'triangle', 0.15, now);
             }
         }
-
         function playDiceSound() {
             if (!audioCtx) return;
-            // Simple click/tick for dice
+            playTone(800 + Math.random()*200, 'square', 0.05, audioCtx.currentTime);
+        }
+        function playSlideSound(isLadder) {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-            
-            const now = audioCtx.currentTime;
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(800 + Math.random()*200, now);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-            
-            osc.start(now);
-            osc.stop(now + 0.05);
+            if (isLadder) { // Zip up
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.8);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.8);
+                osc.start(now); osc.stop(now + 0.8);
+            } else { // Slide down
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 1.0);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.0);
+                osc.start(now); osc.stop(now + 1.0);
+            }
         }
+        function playQuizSound(correct) {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            if (correct) {
+                // Ding Ding!
+                playTone(880, 'sine', 0.1, now);
+                playTone(1100, 'sine', 0.2, now + 0.15);
+            } else {
+                // Wah wah
+                playTone(400, 'sawtooth', 0.3, now);
+                setTimeout(() => playTone(300, 'sawtooth', 0.4, audioCtx.currentTime), 300);
+            }
+        }
+        function playAttackSound() {
+            // Whoosh/Zap sound for sending player back
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
+        }
+
+        // --- Quiz Data ---
+        const QUIZ_QUESTIONS = [
+            { q: "微塑膠通常是指直徑小於多少的塑膠碎片？", options: ["5 公分", "5 毫米 (mm)", "1 公分"], ans: 1 },
+            { q: "哪種衣物在洗滌時會釋放大量微塑膠纖維？", options: ["純棉 T 恤", "羊毛衫", "聚酯纖維運動衣"], ans: 2 },
+            { q: "人類每週平均可能攝入多少微塑膠？", options: ["一顆米粒", "一張信用卡", "一顆蘋果"], ans: 1 },
+            { q: "GPGP (太平洋垃圾帶) 主要由什麼組成？", options: ["大型廢船", "微塑膠濃湯", "漂流木"], ans: 1 },
+            { q: "海洋中大部分的塑膠垃圾來自哪裡？", options: ["陸地活動", "海上漁業", "海底火山"], ans: 0 }
+        ];
 
         // --- Game Config ---
         const BOARD_SIZE = 10;
         const TILE_SIZE = 2; 
         
+        // Existing Events + NEW CHANCE TILES
         const EVENTS = {
-            // Ladders (Green)
-            4: { end: 14, type: 'ladder', title: "使用環保袋 🛍️", text: "你拒絕了塑膠袋，減少了垃圾產生！前進到 14 格。" },
-            9: { end: 31, type: 'ladder', title: "參與淨灘 🏖️", text: "週末淨灘活動清理了大量海洋廢棄物！大幅前進到 31 格。" },
-            21: { end: 42, type: 'ladder', title: "回收分類 ♻️", text: "你正確地分類了塑膠垃圾，防止它們進入海洋。前進到 42 格。" },
-            28: { end: 84, type: 'ladder', title: "科學創新 🔬", text: "科學家發明了分解塑膠的新酵素！這是巨大的突破！飛躍到 84 格。" },
-            51: { end: 67, type: 'ladder', title: "自帶水壺 🥤", text: "你養成了自帶水壺的好習慣，減少寶特瓶使用。前進到 67 格。" },
-            71: { end: 91, type: 'ladder', title: "政策立法 📜", text: "政府通過了禁止一次性塑膠的法案！環境大幅改善。前進到 91 格。" },
+            // Ladders
+            4: { end: 14, type: 'ladder', title: "使用環保袋 🛍️", text: "拒絕塑膠袋，減少垃圾！前進到 14 格。" },
+            9: { end: 31, type: 'ladder', title: "參與淨灘 🏖️", text: "淨灘清理了大量廢棄物！大幅前進到 31 格。" },
+            21: { end: 42, type: 'ladder', title: "回收分類 ♻️", text: "正確分類垃圾。前進到 42 格。" },
+            28: { end: 84, type: 'ladder', title: "科學創新 🔬", text: "發明分解塑膠酵素！飛躍到 84 格。" },
+            51: { end: 67, type: 'ladder', title: "自帶水壺 🥤", text: "養成好習慣。前進到 67 格。" },
+            71: { end: 91, type: 'ladder', title: "政策立法 📜", text: "禁止一次性塑膠！前進到 91 格。" },
+            // Snakes
+            17: { end: 7, type: 'snake', title: "誤食塑膠 🐢", text: "海龜誤食塑膠袋。後退到 7 格。" },
+            54: { end: 34, type: 'snake', title: "GPGP 擴大 😱", text: "垃圾帶擴大！後退到 34 格。" },
+            62: { end: 19, type: 'snake', title: "微塑膠入侵 🐟", text: "進入食物鏈。大幅後退到 19 格。" },
+            64: { end: 60, type: 'snake', title: "塑膠纏繞 🕸️", text: "海鳥被纏住。後退到 60 格。" },
+            87: { end: 24, type: 'snake', title: "需要 450 年 ⏳", text: "寶特瓶難以分解。跌落回 24 格。" },
+            93: { end: 73, type: 'snake', title: "洋流匯聚 🌊", text: "形成垃圾島。後退到 73 格。" },
+            95: { end: 75, type: 'snake', title: "幽靈漁具 👻", text: "遺棄漁具危害海洋。後退到 75 格。" },
+            99: { end: 78, type: 'snake', title: "非法傾倒 🏭", text: "工廠亂倒廢料。後退到 78 格。" },
+            // Facts
+            2: { type: 'fact', title: "你知道嗎？ 🤔", text: "GPGP 像是一碗充滿塑膠的「濃湯」！" },
+            12: { type: 'fact', title: "微纖維 👕", text: "洗衣服也會產生微塑膠污染。" },
+            36: { type: 'fact', title: "無處不在 🏔️", text: "聖母峰頂也有發現微塑膠！" },
+            58: { type: 'fact', title: "來源 🏙️", text: "80% 海洋垃圾來自陸地。" },
             
-            // Snakes (Red)
-            17: { end: 7, type: 'snake', title: "誤食塑膠 🐢", text: "海龜誤將塑膠袋當成水母吃下。這太令人悲傷了，後退到 7 格。" },
-            54: { end: 34, type: 'snake', title: "GPGP 擴大 😱", text: "太平洋垃圾帶 (GPGP) 面積持續擴大，現在已經有三個法國那麼大！後退到 34 格。" },
-            62: { end: 19, type: 'snake', title: "微塑膠入侵 🐟", text: "微塑膠進入了食物鏈，最終被人類吃下。嚴重健康隱憂，大幅後退到 19 格。" },
-            64: { end: 60, type: 'snake', title: "塑膠纏繞 🕸️", text: "海鳥被廢棄的漁網纏住無法脫身。後退到 60 格。" },
-            87: { end: 24, type: 'snake', title: "需要 450 年 ⏳", text: "你丟棄的寶特瓶需要 450 年才能分解。它將長期危害環境。跌落回 24 格。" },
-            93: { end: 73, type: 'snake', title: "洋流匯聚 🌊", text: "洋流將世界各地的垃圾帶到了這裡，形成了巨大的垃圾島。後退到 73 格。" },
-            95: { end: 75, type: 'snake', title: "幽靈漁具 👻", text: "被遺棄的「幽靈漁具」持續在海中捕殺魚類。後退到 75 格。" },
-            99: { end: 78, type: 'snake', title: "非法傾倒 🏭", text: "工廠非法向海洋傾倒未處理的塑膠廢料。這太可惡了！後退到 78 格。" },
-
-            // Fun Facts (Yellow)
-            2: { type: 'fact', title: "你知道嗎？ 🤔", text: "太平洋垃圾帶 (GPGP) 並不只是一座島，它更像是一碗充滿塑膠碎片的「濃湯」！🍵" },
-            12: { type: 'fact', title: "微纖維 👕", text: "每次洗滌合成纖維的衣服（如聚酯纖維）時，數千條微小的塑膠纖維會脫落並流入海洋。" },
-            25: { type: 'fact', title: "陽光的作用 ☀️", text: "海洋中的塑膠通常不會「生物分解」，而是因陽光照射而「光降解」，碎裂成更小的微塑膠。" },
-            36: { type: 'fact', title: "無處不在 🏔️", text: "科學家甚至在聖母峰的頂端和馬里亞納海溝的底部都發現了微塑膠！🌍" },
-            45: { type: 'fact', title: "海洋生物的危機 🐋", text: "每年有超過 100 萬隻海鳥和 10 萬隻海洋哺乳動物因塑膠污染而死亡。😢" },
-            58: { type: 'fact', title: "來源哪裡來？ 🏙️", text: "海洋垃圾中，約有 80% 來自陸地上的活動，只有 20% 來自海上活動（如漁業）。" },
-            77: { type: 'fact', title: "大大小小 📏", text: "微塑膠被定義為直徑小於 5 毫米的塑膠碎片，比一顆米粒還小！🍚" },
-            82: { type: 'fact', title: "煙蒂也是塑膠 🚬", text: "香煙過濾嘴是由醋酸纖維素（一種塑膠）製成的，它們是海灘上最常見的垃圾之一。" }
+            // NEW CHANCE TILES (紫色的機會命運)
+            15: { type: 'chance' },
+            40: { type: 'chance' },
+            66: { type: 'chance' },
+            80: { type: 'chance' }
         };
 
-        // --- Three.js Setup ---
+        // --- Three.js ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x87CEEB);
         scene.fog = new THREE.Fog(0x87CEEB, 20, 90);
-
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        
-        function updateCameraPosition() {
-            const aspect = window.innerWidth / window.innerHeight;
-            if (aspect < 1) {
-                camera.position.set(0, 45, 35); 
-                camera.lookAt(0, -5, 0);
-            } else {
-                camera.position.set(0, 32, 24);
-                camera.lookAt(0, -2, 0);
-            }
-            camera.aspect = aspect;
-            camera.updateProjectionMatrix();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+        function updateCam() {
+            const aspect = window.innerWidth/window.innerHeight;
+            if(aspect < 1) { camera.position.set(0, 45, 35); camera.lookAt(0, -5, 0); }
+            else { camera.position.set(0, 32, 24); camera.lookAt(0, -2, 0); }
+            camera.aspect = aspect; camera.updateProjectionMatrix();
         }
-
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
         dirLight.position.set(20, 30, 20);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 2048;
         dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.left = -25;
-        dirLight.shadow.camera.right = 25;
-        dirLight.shadow.camera.top = 25;
-        dirLight.shadow.camera.bottom = -25;
         scene.add(dirLight);
 
-        // --- Environment & Board ---
         const tiles = [];
         const tileGroup = new THREE.Group();
         scene.add(tileGroup);
         const boardOffset = (BOARD_SIZE * TILE_SIZE) / 2 - (TILE_SIZE / 2);
 
         function createEnvironment() {
-            const floorGeo = new THREE.PlaneGeometry(120, 120);
-            const floorMat = new THREE.MeshPhongMaterial({ 
-                color: 0x1e3a8a, 
-                shininess: 40,
-                specular: 0x444444
-            });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.position.y = -1.5;
-            floor.receiveShadow = true;
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshPhongMaterial({ color: 0x1e3a8a }));
+            floor.rotation.x = -Math.PI/2; floor.position.y = -1.5; floor.receiveShadow = true;
             scene.add(floor);
-
-            createBuoy(-15, 0, 5);
-            createBuoy(15, 0, -5);
-            createPaperBoat(12, 0, 12);
-            createTrashIsland(-20, -1, -20);
+            createBuoy(-15, 0, 5); createBuoy(15, 0, -5); createTrashIsland(-20, -1, -20);
         }
-
-        function createBuoy(x, y, z) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-            const baseGeo = new THREE.CylinderGeometry(1, 1, 1.5, 16);
-            const baseMat = new THREE.MeshPhongMaterial({ color: 0xef4444 });
-            const base = new THREE.Mesh(baseGeo, baseMat);
-            group.add(base);
-            const stickGeo = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
-            const stick = new THREE.Mesh(stickGeo, new THREE.MeshPhongMaterial({ color: 0xffffff }));
-            stick.position.y = 1.5;
-            group.add(stick);
-            group.userData = { offset: Math.random() * Math.PI, speed: 2 };
-            buoys.push(group);
-            scene.add(group);
+        function createBuoy(x,y,z) {
+            const g = new THREE.Group(); g.position.set(x,y,z);
+            g.add(new THREE.Mesh(new THREE.CylinderGeometry(1,1,1.5,16), new THREE.MeshPhongMaterial({color:0xef4444})));
+            const s = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,3,8), new THREE.MeshPhongMaterial({color:0xffffff}));
+            s.position.y=1.5; g.add(s); g.userData={offset:Math.random()*Math.PI, speed:2}; buoys.push(g); scene.add(g);
         }
-
-        function createPaperBoat(x, y, z) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-            group.rotation.y = -0.5;
-            const mat = new THREE.MeshPhongMaterial({ color: 0xf1f5f9, side: THREE.DoubleSide });
-            const hullGeo = new THREE.ConeGeometry(1.5, 1, 4, 1, true);
-            const hull = new THREE.Mesh(hullGeo, mat);
-            hull.scale.set(1, 1, 2.5);
-            hull.rotation.x = Math.PI;
-            hull.position.y = 0.5;
-            group.add(hull);
-            const sailGeo = new THREE.BufferGeometry();
-            const vertices = new Float32Array([0, 0.5, 0.5, 0, 2.5, 0.5, 0, 0.5, -1.5]);
-            sailGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-            const sail = new THREE.Mesh(sailGeo, mat);
-            group.add(sail);
-            group.userData = { offset: Math.random() * Math.PI, speed: 1.5 };
-            buoys.push(group);
-            scene.add(group);
-        }
-
-        function createTrashIsland(x, y, z) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-            const trashMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
-            for(let i=0; i<15; i++) {
-                const s = 1 + Math.random() * 2;
-                const geo = new THREE.BoxGeometry(s, s*0.5, s);
-                const m = new THREE.Mesh(geo, trashMat);
-                m.position.set((Math.random()-0.5) * 10, Math.random() * 1, (Math.random()-0.5) * 8);
-                m.rotation.set(Math.random(), Math.random(), Math.random());
-                group.add(m);
+        function createTrashIsland(x,y,z) {
+            const g = new THREE.Group(); g.position.set(x,y,z);
+            const mat = new THREE.MeshLambertMaterial({color:0x475569});
+            for(let i=0;i<15;i++){
+                const m = new THREE.Mesh(new THREE.BoxGeometry(1+Math.random()*2, 0.5+Math.random(), 1+Math.random()*2), mat);
+                m.position.set((Math.random()-0.5)*10, Math.random(), (Math.random()-0.5)*8);
+                m.rotation.set(Math.random(),Math.random(),Math.random()); g.add(m);
             }
-            scene.add(group);
+            scene.add(g);
         }
 
         function createBoard() {
@@ -345,473 +327,373 @@
                 const x = xIndex * TILE_SIZE - boardOffset;
                 const z = zIndex * TILE_SIZE - boardOffset;
                 const geometry = new THREE.BoxGeometry(TILE_SIZE * 0.95, 0.5, TILE_SIZE * 0.95);
-                const isEven = (xIndex + row) % 2 === 0;
-                const color = isEven ? 0xbfdbfe : 0x60a5fa;
-                const material = new THREE.MeshLambertMaterial({ color: color });
-                const cube = new THREE.Mesh(geometry, material);
+                
+                // Color Logic
+                let color = (xIndex + row) % 2 === 0 ? 0xbfdbfe : 0x60a5fa;
+                const event = EVENTS[i + 1];
+                if (event && event.type === 'chance') {
+                    color = 0xa78bfa; // Purple for Chance
+                }
+
+                const cube = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: color }));
                 cube.position.set(x, 0, z);
-                cube.receiveShadow = true;
-                cube.castShadow = true;
+                cube.receiveShadow = true; cube.castShadow = true;
                 tileGroup.add(cube);
                 tiles.push(new THREE.Vector3(x, 0.5, z));
-                if (i === 0) addMarker(x, z, 0x22c55e);
-                if (i === 99) addMarker(x, z, 0xfacc15);
-                
-                const event = EVENTS[i + 1];
-                if (event && event.type === 'fact') {
-                    addQuestionMark(x, z);
-                }
+
+                if (i===0) addMarker(x,z,0x22c55e);
+                if (i===99) addMarker(x,z,0xfacc15);
+                if (event && event.type === 'fact') addQuestionMark(x, z, 0xfacc15); // Yellow
+                if (event && event.type === 'chance') addQuestionMark(x, z, 0x7c3aed); // Dark Purple
             }
             drawConnections();
         }
 
         function drawConnections() {
-            Object.keys(EVENTS).forEach(startKey => {
-                const startIdx = parseInt(startKey) - 1;
-                const event = EVENTS[startKey];
-                if (event.type === 'fact') return; 
-
-                const endIdx = event.end - 1;
-                const startPos = tiles[startIdx];
-                const endPos = tiles[endIdx];
-                const isSnake = event.type === 'snake';
-                const color = isSnake ? 0xef4444 : 0x22c55e;
-                const midPoint = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
-                midPoint.y += isSnake ? 4 : 6;
-                const path = new THREE.QuadraticBezierCurve3(startPos, midPoint, endPos);
-                const tubeGeo = new THREE.TubeGeometry(path, 32, 0.15, 8, false);
-                const tubeMat = new THREE.MeshPhongMaterial({ color: color });
-                const tube = new THREE.Mesh(tubeGeo, tubeMat);
-                tube.castShadow = true;
-                scene.add(tube);
-            });
-        }
-
-        function addMarker(x, z, color) {
-            const geo = new THREE.CylinderGeometry(0.6, 0.6, 0.1, 16);
-            const mat = new THREE.MeshBasicMaterial({ color: color });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(x, 0.3, z);
-            scene.add(mesh);
-        }
-
-        function addQuestionMark(x, z) {
-            const geo = new THREE.CylinderGeometry(0.4, 0.4, 0.15, 16);
-            const mat = new THREE.MeshBasicMaterial({ color: 0xfacc15 }); 
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.set(x, 0.3, z);
-            scene.add(mesh);
-        }
-
-        function createBoardDecorations() {
-            const specialIndices = new Set([0, 99]);
             Object.keys(EVENTS).forEach(k => {
-                specialIndices.add(parseInt(k)-1);
-                if(EVENTS[k].end) specialIndices.add(EVENTS[k].end-1);
+                const evt = EVENTS[k];
+                if(evt.type === 'fact' || evt.type === 'chance') return;
+                const start = tiles[k-1], end = tiles[evt.end-1];
+                const color = evt.type === 'snake' ? 0xef4444 : 0x22c55e;
+                const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+                mid.y += evt.type === 'snake' ? 4 : 6;
+                const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(start, mid, end), 32, 0.15, 8, false), new THREE.MeshPhongMaterial({ color }));
+                tube.castShadow = true; scene.add(tube);
             });
-            [12, 35, 58, 81].forEach(idx => {
-                if(!specialIndices.has(idx)) {
-                    const pos = tiles[idx];
-                    createTurtle(pos.x + (Math.random()-0.5)*0.8, pos.y, pos.z + (Math.random()-0.5)*0.8);
-                }
-            });
-            [25, 48, 65, 90, 5].forEach(idx => {
-                 const pos = tiles[idx];
-                 createPlasticDebris(pos.x + (Math.random()-0.5)*1, pos.y - 0.1, pos.z + (Math.random()-0.5)*1);
-             });
         }
-
-        function createTurtle(x, y, z) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-            group.rotation.y = Math.random() * Math.PI * 2;
-            const shell = new THREE.Mesh(
-                new THREE.SphereGeometry(0.4, 8, 8),
-                new THREE.MeshPhongMaterial({ color: 0x34d399 })
-            );
-            shell.scale.set(1, 0.5, 1.1);
-            shell.position.y = 0.2;
-            shell.castShadow = true;
-            group.add(shell);
-            const head = new THREE.Mesh(
-                new THREE.SphereGeometry(0.2, 8, 8),
-                new THREE.MeshPhongMaterial({ color: 0xa7f3d0 })
-            );
-            head.position.set(0, 0.25, 0.5);
-            group.add(head);
-            scene.add(group);
+        function addMarker(x,z,c) {
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,0.1,16), new THREE.MeshBasicMaterial({color:c}));
+            m.position.set(x,0.3,z); scene.add(m);
         }
-
-        function createPlasticDebris(x, y, z) {
-            const group = new THREE.Group();
-            group.position.set(x, y, z);
-            const mat = new THREE.MeshPhongMaterial({ color: 0xf8fafc, transparent: true, opacity: 0.7 });
-            for(let i=0; i<2; i++) {
-                const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.25, 0), mat);
-                m.scale.set(1+Math.random(), 0.3, 1+Math.random());
-                m.position.set((Math.random()-0.5)*0.3, 0.1, (Math.random()-0.5)*0.3);
-                group.add(m);
-            }
-            scene.add(group);
+        function addQuestionMark(x,z,c) {
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.15,16), new THREE.MeshBasicMaterial({color:c}));
+            m.position.set(x,0.3,z); scene.add(m);
         }
 
         // --- Players ---
-        const players = [
-            { id: 1, pos: 0, mesh: null, color: 0xdc2626, displayId: 'p1-score' },
-            { id: 2, pos: 0, mesh: null, color: 0x2563eb, displayId: 'p2-score' }
-        ];
+        const players = [ {id:1, pos:0, mesh:null, color:0xdc2626}, {id:2, pos:0, mesh:null, color:0x2563eb} ];
         let currentPlayerIndex = 0;
         let isMoving = false;
         let gameWon = false;
 
         function createPlayers() {
-            players.forEach((p, index) => {
-                const geo = new THREE.SphereGeometry(0.6, 32, 32);
-                const mat = new THREE.MeshPhongMaterial({ color: p.color, shininess: 100 });
-                const mesh = new THREE.Mesh(geo, mat);
-                const offset = index === 0 ? -0.4 : 0.4;
-                const startPos = tiles[0];
-                mesh.position.set(startPos.x + offset, startPos.y + 0.6, startPos.z);
-                mesh.castShadow = true;
-                scene.add(mesh);
-                p.mesh = mesh;
+            players.forEach((p,i) => {
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.6,32,32), new THREE.MeshPhongMaterial({color:p.color, shininess:100}));
+                const off = i===0 ? -0.4 : 0.4;
+                mesh.position.set(tiles[0].x+off, tiles[0].y+0.6, tiles[0].z);
+                mesh.castShadow = true; scene.add(mesh); p.mesh = mesh;
             });
         }
 
-        // --- Victory Balloon ---
-        let victoryBalloon = null;
-        let victoryBalloonRising = false;
-        let victoryBalloonTarget = null;
-        let videoHasStarted = false;
-
+        // --- Balloon ---
+        let victoryBalloon = null, victoryBalloonRising = false, victoryBalloonTarget = null, videoHasStarted = false;
+        const buoys = [];
         function createVictoryBalloon() {
-            const balloonGroup = new THREE.Group();
-            
-            // Heart Shape
-            const x = 0, y = 0;
+            const g = new THREE.Group();
             const heartShape = new THREE.Shape();
-            heartShape.moveTo( x + 5, y + 5 );
-            heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
-            heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7,x - 6, y + 7 );
-            heartShape.bezierCurveTo( x - 6, y + 11, x - 3, y + 15.4, x + 5, y + 19 );
-            heartShape.bezierCurveTo( x + 12, y + 15.4, x + 16, y + 11, x + 16, y + 7 );
-            heartShape.bezierCurveTo( x + 16, y + 7, x + 16, y, x + 10, y );
-            heartShape.bezierCurveTo( x + 7, y, x + 5, y + 5, x + 5, y + 5 );
-
-            const extrudeSettings = { depth: 2, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
-            const geometry = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
-            geometry.center();
+            const x = 0, y = 0;
+            heartShape.moveTo(x+5, y+5);
+            heartShape.bezierCurveTo(x+5, y+5, x+4, y, x, y);
+            heartShape.bezierCurveTo(x-6, y, x-6, y+7, x-6, y+7);
+            heartShape.bezierCurveTo(x-6, y+11, x-3, y+15.4, x+5, y+19);
+            heartShape.bezierCurveTo(x+12, y+15.4, x+16, y+11, x+16, y+7);
+            heartShape.bezierCurveTo(x+16, y+7, x+16, y, x+10, y);
+            heartShape.bezierCurveTo(x+7, y, x+5, y+5, x+5, y+5);
+            const heart = new THREE.Mesh(new THREE.ExtrudeGeometry(heartShape, {depth:2, bevelEnabled:true, bevelSegments:2, steps:2, bevelSize:1, bevelThickness:1}), new THREE.MeshPhongMaterial({color:0xff69b4}));
+            heart.geometry.center(); heart.scale.set(0.5,0.5,0.5); heart.position.y=8; heart.rotation.z=Math.PI; heart.rotation.x=Math.PI; g.add(heart);
             
-            const material = new THREE.MeshPhongMaterial({ color: 0xff69b4, shininess: 60 });
-            const heartMesh = new THREE.Mesh( geometry, material );
-            heartMesh.scale.set(0.5, 0.5, 0.5);
-            heartMesh.position.y = 8;
-            heartMesh.rotation.z = Math.PI; 
-            heartMesh.rotation.x = Math.PI;
-            
-            balloonGroup.add( heartMesh );
-
-            const basketGeo = new THREE.BoxGeometry(3, 2, 3);
-            const basketMat = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-            const basket = new THREE.Mesh(basketGeo, basketMat);
-            basket.position.y = 0;
-            balloonGroup.add(basket);
-
-            const lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
-            const ropeGeo = new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(-1.5, 1, -1.5), new THREE.Vector3(-2, 4, -1),
-                new THREE.Vector3(1.5, 1, -1.5), new THREE.Vector3(2, 4, -1),
-                new THREE.Vector3(1.5, 1, 1.5), new THREE.Vector3(2, 4, 1),
-                new THREE.Vector3(-1.5, 1, 1.5), new THREE.Vector3(-2, 4, 1)
-            ]);
-            const ropes = new THREE.LineSegments(ropeGeo, lineMat);
-            balloonGroup.add(ropes);
-
-            balloonGroup.position.set(25, 5, -25);
-            scene.add(balloonGroup);
-            
-            victoryBalloon = balloonGroup;
-            victoryBalloon.userData = { startY: 5, speed: 1, offset: 0 };
-            buoys.push(victoryBalloon);
+            const basket = new THREE.Mesh(new THREE.BoxGeometry(3,2,3), new THREE.MeshLambertMaterial({color:0x8B4513}));
+            g.add(basket);
+            g.position.set(25,5,-25); scene.add(g); victoryBalloon=g; victoryBalloon.userData={startY:5, speed:1, offset:0}; buoys.push(g);
         }
 
-
-        // --- Game Logic ---
+        // --- Main Logic ---
         const rollBtn = document.getElementById('roll-btn');
         const diceResultDiv = document.getElementById('dice-result');
         const turnIndicator = document.getElementById('turn-indicator');
 
         rollBtn.addEventListener('click', async () => {
             if (isMoving || gameWon) return;
-            
-            // Init audio on user interaction
             initAudio();
+            isMoving = true; rollBtn.disabled = true; rollBtn.classList.add('opacity-50');
             
-            isMoving = true;
-            rollBtn.disabled = true;
-            rollBtn.classList.add('opacity-50');
-
             for(let i=0; i<10; i++) {
-                let r = Math.floor(Math.random() * 6) + 1;
-                diceResultDiv.innerText = "🎲 " + r;
-                playDiceSound(); // Play little tick sound
-                await new Promise(r => setTimeout(r, 50));
+                diceResultDiv.innerText = "🎲 " + (Math.floor(Math.random()*6)+1);
+                playDiceSound();
+                await new Promise(r=>setTimeout(r, 50));
             }
-            
-            const finalRoll = Math.floor(Math.random() * 6) + 1;
-            diceResultDiv.innerText = "🎲 " + finalRoll;
-            await movePlayer(players[currentPlayerIndex], finalRoll);
+            const roll = Math.floor(Math.random()*6)+1;
+            diceResultDiv.innerText = "🎲 " + roll;
+            await movePlayer(players[currentPlayerIndex], roll);
         });
 
         async function movePlayer(player, steps) {
-            let currentTileIdx = player.pos;
-            let targetTileIdx = currentTileIdx + steps;
+            let target = player.pos + steps;
+            if (target >= 99) target = 99;
 
-            if (targetTileIdx >= 99) {
-                targetTileIdx = 99;
-            }
-
-            for (let i = currentTileIdx + 1; i <= targetTileIdx; i++) {
+            for(let i=player.pos+1; i<=target; i++) {
                 await hopTo(player, i);
             }
-            
-            player.pos = targetTileIdx;
-            const event = EVENTS[targetTileIdx + 1];
+            player.pos = target;
+            const event = EVENTS[target+1];
 
-            if (event) {
+            if(event) {
                 await new Promise(r => setTimeout(r, 400));
-                showFactModal(event, async () => {
-                    if (event.end) {
-                        const endIdx = event.end - 1;
-                        await slideTo(player, endIdx);
-                        player.pos = endIdx;
-                    }
-                    checkWin(player);
-                });
+                
+                if(event.type === 'chance') {
+                    // Show Quiz for Chance/Fate
+                    showChanceModal(player);
+                } else {
+                    // Normal Snake/Ladder/Fact
+                    showFactModal(event, async () => {
+                        if(event.end) {
+                            if(event.type==='ladder') playSlideSound(true);
+                            else if(event.type==='snake') playSlideSound(false);
+                            await slideTo(player, event.end-1);
+                            player.pos = event.end-1;
+                        }
+                        checkWin(player);
+                    });
+                }
             } else {
                 checkWin(player);
             }
         }
 
+        // --- Quiz & Chance Logic ---
+        function showChanceModal(player) {
+            const modal = document.getElementById('info-modal');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const icon = document.getElementById('modal-icon');
+            const quizOpts = document.getElementById('quiz-options');
+            const closeBtn = document.getElementById('modal-close-btn');
+
+            // Pick a random question
+            const q = QUIZ_QUESTIONS[Math.floor(Math.random() * QUIZ_QUESTIONS.length)];
+            
+            icon.innerText = "❓";
+            title.innerText = "機會或命運";
+            title.className = "text-xl md:text-2xl font-bold mb-3 text-purple-600";
+            desc.innerText = q.q;
+
+            quizOpts.innerHTML = "";
+            quizOpts.classList.remove('hidden-custom');
+            closeBtn.classList.add('hidden-custom'); // Hide default close, force answer
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-btn";
+                btn.innerText = opt;
+                btn.onclick = () => handleQuizAnswer(player, idx === q.ans, modal);
+                quizOpts.appendChild(btn);
+            });
+
+            modal.classList.remove('hidden-custom');
+        }
+
+        function handleQuizAnswer(player, isCorrect, modal) {
+            playQuizSound(isCorrect);
+            
+            const quizOpts = document.getElementById('quiz-options');
+            const desc = document.getElementById('modal-desc');
+            const title = document.getElementById('modal-title');
+            const closeBtn = document.getElementById('modal-close-btn');
+
+            quizOpts.innerHTML = ""; // Clear buttons
+            closeBtn.classList.remove('hidden-custom');
+            
+            if(isCorrect) {
+                // Random Chance or Fate
+                const isGood = Math.random() > 0.5; 
+                if(isGood) {
+                    // Good: Fast forward
+                    title.innerText = "🎉 命運眷顧！";
+                    desc.innerText = "答對了！你發現了一道強勁的洋流，前進 5 格！";
+                    closeBtn.onclick = () => {
+                        modal.classList.add('hidden-custom');
+                        playSlideSound(true);
+                        movePlayerAfterChance(player, 5);
+                    };
+                } else {
+                    // Attack: Send opponent back
+                    title.innerText = "⚡ 塑膠海怪發威！";
+                    desc.innerText = "答對了！你召喚了海怪，把對手嚇回起點！";
+                    closeBtn.onclick = () => {
+                        modal.classList.add('hidden-custom');
+                        playAttackSound();
+                        sendOpponentBack(player);
+                    };
+                }
+            } else {
+                title.innerText = "❌ 很遺憾...";
+                desc.innerText = "答錯了，沒有發生任何事情。";
+                closeBtn.onclick = () => {
+                    modal.classList.add('hidden-custom');
+                    checkWin(player);
+                };
+            }
+        }
+
+        async function movePlayerAfterChance(player, steps) {
+             // Direct slide/hop logic for reward
+            let target = player.pos + steps;
+            if(target > 99) target = 99;
+            await slideTo(player, target);
+            player.pos = target;
+            checkWin(player);
+        }
+
+        async function sendOpponentBack(currentPlayer) {
+            const opponentId = currentPlayer.id === 1 ? 2 : 1;
+            const opponent = players.find(p => p.id === opponentId);
+            
+            if (opponent.pos > 0) {
+                await slideTo(opponent, 0);
+                opponent.pos = 0;
+            }
+            checkWin(currentPlayer);
+        }
+
+        // --- Standard Modals ---
+        function showFactModal(event, callback) {
+            const modal = document.getElementById('info-modal');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const icon = document.getElementById('modal-icon');
+            const quizOpts = document.getElementById('quiz-options');
+            const closeBtn = document.getElementById('modal-close-btn');
+
+            quizOpts.classList.add('hidden-custom');
+            closeBtn.classList.remove('hidden-custom');
+            closeBtn.onclick = () => {
+                closeModal();
+                if(callback) callback();
+            };
+
+            title.innerText = event.title;
+            desc.innerText = event.text;
+
+            if(event.type === 'snake') {
+                icon.innerText = "⚠️"; title.className = "text-xl md:text-2xl font-bold mb-3 text-red-600";
+            } else if(event.type === 'ladder') {
+                icon.innerText = "🌱"; title.className = "text-xl md:text-2xl font-bold mb-3 text-green-600";
+            } else {
+                icon.innerText = "💡"; title.className = "text-xl md:text-2xl font-bold mb-3 text-yellow-600";
+            }
+            modal.classList.remove('hidden-custom');
+        }
+        function closeModal() { document.getElementById('info-modal').classList.add('hidden-custom'); }
+
+        // --- Movement Visuals ---
         async function hopTo(player, tileIdx) {
             const start = player.mesh.position.clone();
             const dest = tiles[tileIdx].clone();
-            const offset = player.id === 1 ? -0.4 : 0.4;
-            dest.x += offset;
-            dest.y += 0.6;
-            const duration = 300;
-            const startTime = Date.now();
-            
-            // Play sound!
+            const off = player.id===1 ? -0.4 : 0.4;
+            dest.x += off; dest.y += 0.6;
+            const duration = 300; const startTime = Date.now();
             playMoveSound(player.id);
-
-            return new Promise(resolve => {
-                function animateHop() {
-                    const now = Date.now();
-                    const progress = Math.min((now - startTime) / duration, 1);
-                    player.mesh.position.lerpVectors(start, dest, progress);
-                    player.mesh.position.y = dest.y + Math.sin(progress * Math.PI) * 1.5;
-                    if (progress < 1) requestAnimationFrame(animateHop);
-                    else resolve();
-                }
-                animateHop();
+            return new Promise(r => {
+                function loop() {
+                    const p = Math.min((Date.now()-startTime)/duration, 1);
+                    player.mesh.position.lerpVectors(start, dest, p);
+                    player.mesh.position.y = dest.y + Math.sin(p*Math.PI)*1.5;
+                    if(p<1) requestAnimationFrame(loop); else r();
+                } loop();
             });
         }
-
         async function slideTo(player, tileIdx) {
             const start = player.mesh.position.clone();
             const dest = tiles[tileIdx].clone();
-            const offset = player.id === 1 ? -0.4 : 0.4;
-            dest.x += offset;
-            dest.y += 0.6;
-            const duration = 1000;
-            const startTime = Date.now();
-            return new Promise(resolve => {
-                function animateSlide() {
-                    const now = Date.now();
-                    const progress = Math.min((now - startTime) / duration, 1);
-                    player.mesh.position.lerpVectors(start, dest, progress);
-                    if (progress < 1) requestAnimationFrame(animateSlide);
-                    else resolve();
-                }
-                animateSlide();
+            const off = player.id===1 ? -0.4 : 0.4;
+            dest.x += off; dest.y += 0.6;
+            const duration = 1000; const startTime = Date.now();
+            return new Promise(r => {
+                function loop() {
+                    const p = Math.min((Date.now()-startTime)/duration, 1);
+                    player.mesh.position.lerpVectors(start, dest, p);
+                    if(p<1) requestAnimationFrame(loop); else r();
+                } loop();
             });
         }
 
+        // --- Game Flow ---
         function checkWin(player) {
             updateScoreUI();
-            if (player.pos === 99) {
-                triggerWin(player);
-            } else {
+            if(player.pos === 99) triggerWin(player);
+            else {
                 currentPlayerIndex = currentPlayerIndex === 0 ? 1 : 0;
                 updateTurnUI();
-                isMoving = false;
-                rollBtn.disabled = false;
-                rollBtn.classList.remove('opacity-50');
+                isMoving = false; rollBtn.disabled = false; rollBtn.classList.remove('opacity-50');
             }
         }
-
         function triggerWin(player) {
             gameWon = true;
-            const winToast = document.getElementById('win-toast');
+            document.getElementById('win-toast').classList.remove('hidden-custom');
             document.getElementById('winner-text').innerText = `玩家 ${player.id} 獲勝！`;
-            winToast.classList.remove('hidden-custom');
-            
-            // Hide UI
             document.getElementById('ui-layer').classList.add('opacity-0');
-            
-            // Balloon Logic
             victoryBalloonTarget = player.mesh.position.clone();
-            const index = buoys.indexOf(victoryBalloon);
-            if (index > -1) {
-                buoys.splice(index, 1);
-            }
+            const idx = buoys.indexOf(victoryBalloon);
+            if(idx>-1) buoys.splice(idx, 1);
             victoryBalloonRising = true;
-
-            // Confetti
-            const end = Date.now() + 5000;
-            (function frame() {
-                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
-                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
-            
-            // Auto hide toast after 3s so we can see balloon
-            setTimeout(() => {
-                winToast.classList.add('opacity-0');
-            }, 3000);
+            const end = Date.now()+5000;
+            (function f(){
+                confetti({particleCount:5, angle:60, spread:55, origin:{x:0}});
+                confetti({particleCount:5, angle:120, spread:55, origin:{x:1}});
+                if(Date.now()<end) requestAnimationFrame(f);
+            })();
+            setTimeout(() => document.getElementById('win-toast').classList.add('opacity-0'), 3000);
         }
 
         function updateTurnUI() {
             const isP1 = currentPlayerIndex === 0;
-            turnIndicator.className = `text-sm md:text-base font-bold px-4 py-2 rounded-full border transition-all ${isP1 ? 'bg-red-100 text-red-600 border-red-200' : 'bg-blue-100 text-blue-600 border-blue-200'}`;
-            turnIndicator.innerText = `換 玩家 ${currentPlayerIndex + 1}`;
-            
-            const rollBtn = document.getElementById('roll-btn');
-            if(isP1) {
-                rollBtn.className = rollBtn.className.replace(/from-blue-600 to-blue-400/g, 'from-red-500 to-red-400').replace(/active:from-blue-700/g, 'active:from-red-700');
-            } else {
-                rollBtn.className = rollBtn.className.replace(/from-red-500 to-red-400/g, 'from-blue-600 to-blue-400').replace(/active:from-red-700/g, 'active:from-blue-700');
-            }
+            turnIndicator.className = `text-sm md:text-base font-bold px-4 py-2 rounded-full border transition-all ${isP1?'bg-red-100 text-red-600 border-red-200':'bg-blue-100 text-blue-600 border-blue-200'}`;
+            turnIndicator.innerText = `換 玩家 ${currentPlayerIndex+1}`;
+            rollBtn.className = rollBtn.className.replace(/from-\w+-(\d+) to-\w+-(\d+)/, isP1?'from-red-500 to-red-400':'from-blue-600 to-blue-400');
         }
-
         function updateScoreUI() {
-            document.getElementById('p1-score').innerText = `P1: ${players[0].pos + 1}`;
-            document.getElementById('p2-score').innerText = `P2: ${players[1].pos + 1}`;
+            document.getElementById('p1-score').innerText = `P1: ${players[0].pos+1}`;
+            document.getElementById('p2-score').innerText = `P2: ${players[1].pos+1}`;
         }
-
-        let currentModalCallback = null;
-        function showFactModal(event, callback) {
-            currentModalCallback = callback;
-            document.getElementById('modal-title').innerText = event.title;
-            document.getElementById('modal-desc').innerText = event.text;
-            const icon = document.getElementById('modal-icon');
-            const title = document.getElementById('modal-title');
-            
-            if (event.type === 'snake') {
-                icon.innerText = "⚠️";
-                title.className = "text-xl md:text-2xl font-bold mb-3 text-red-600";
-            } else if (event.type === 'ladder') {
-                icon.innerText = "🌱";
-                title.className = "text-xl md:text-2xl font-bold mb-3 text-green-600";
-            } else {
-                icon.innerText = "💡";
-                title.className = "text-xl md:text-2xl font-bold mb-3 text-yellow-600";
-            }
-            document.getElementById('fact-modal').classList.remove('hidden-custom');
-        }
-
-        window.closeModal = function() {
-            document.getElementById('fact-modal').classList.add('hidden-custom');
-            if (currentModalCallback) {
-                currentModalCallback();
-                currentModalCallback = null;
-            }
-        }
-        
         function playVictoryVideo() {
-            if (videoHasStarted) return;
-            videoHasStarted = true;
-            const overlay = document.getElementById('video-overlay');
-            const video = document.getElementById('victory-video');
-            
-            overlay.classList.remove('hidden-custom');
-            // Fade in
+            if(videoHasStarted) return; videoHasStarted = true;
+            const v = document.getElementById('video-overlay');
+            v.classList.remove('hidden-custom');
             setTimeout(() => {
-                overlay.classList.remove('opacity-0');
-                video.play().catch(e => console.log("Autoplay prevented, user gesture needed likely:", e));
+                v.classList.remove('opacity-0');
+                document.getElementById('victory-video').play().catch(e=>console.log(e));
             }, 100);
         }
 
-        // --- Animation & Init ---
-        const buoys = [];
-
+        // --- Boot ---
         function init() {
-            createEnvironment();
-            createBoard();
-            createBoardDecorations();
-            createPlayers();
-            createVictoryBalloon();
-            updateCameraPosition();
-            updateTurnUI();
-            
+            createEnvironment(); createBoard(); createPlayers(); createVictoryBalloon();
+            updateCam(); updateTurnUI();
             function animate() {
                 requestAnimationFrame(animate);
-                
-                const time = Date.now() * 0.001;
-                buoys.forEach(b => {
-                    const startY = b.userData.startY || 0;
-                    b.position.y = startY + Math.sin(time * b.userData.speed + b.userData.offset) * 0.5;
-                    if(b.rotation.y) b.rotation.y += 0.002;
-                });
-
-                // Victory Animation
-                if (victoryBalloonRising && victoryBalloon && victoryBalloonTarget) {
-                    // 1. Move to player XY
-                    const targetPos = victoryBalloonTarget;
-                    const dx = targetPos.x - victoryBalloon.position.x;
-                    const dz = targetPos.z - victoryBalloon.position.z;
-                    
-                    if (Math.abs(dx) > 0.1 || Math.abs(dz) > 0.1) {
-                        // Move towards player
-                        victoryBalloon.position.x += dx * 0.03;
-                        victoryBalloon.position.z += dz * 0.03;
-                        victoryBalloon.position.y += (5 - victoryBalloon.position.y) * 0.02;
-                        
-                        // Rotate to face movement
-                        victoryBalloon.rotation.y = Math.atan2(dx, dz);
+                const t = Date.now()*0.001;
+                buoys.forEach(b => { b.position.y = (b.userData.startY||0) + Math.sin(t*b.userData.speed+b.userData.offset)*0.5; if(b.rotation.y) b.rotation.y+=0.002; });
+                if(victoryBalloonRising && victoryBalloonTarget) {
+                    const dx = victoryBalloonTarget.x - victoryBalloon.position.x;
+                    const dz = victoryBalloonTarget.z - victoryBalloon.position.z;
+                    if(Math.abs(dx)>0.1 || Math.abs(dz)>0.1) {
+                        victoryBalloon.position.x += dx*0.03; victoryBalloon.position.z += dz*0.03;
+                        victoryBalloon.position.y += (5-victoryBalloon.position.y)*0.02;
+                        victoryBalloon.rotation.y = Math.atan2(dx,dz);
                     } else {
-                        // 2. Pick up player and Rise
-                        victoryBalloon.position.y += 0.08; // Rising speed
-                        victoryBalloon.rotation.y += 0.005;
-                        
-                        // Put winning player in basket
-                        const winner = players[0].pos === 99 ? players[0] : players[1];
-                        winner.mesh.position.x = victoryBalloon.position.x;
-                        winner.mesh.position.z = victoryBalloon.position.z;
-                        winner.mesh.position.y = victoryBalloon.position.y + 2;
-
-                        // Camera follows balloon
-                        camera.position.y += ((victoryBalloon.position.y + 10) - camera.position.y) * 0.05;
-                        camera.lookAt(victoryBalloon.position.x, victoryBalloon.position.y + 5, victoryBalloon.position.z);
-                        
-                        // 3. Trigger Video at height
-                        if (victoryBalloon.position.y > 30 && !videoHasStarted) {
-                            playVictoryVideo();
-                        }
+                        victoryBalloon.position.y += 0.08; victoryBalloon.rotation.y+=0.005;
+                        const winner = players[0].pos===99 ? players[0] : players[1];
+                        winner.mesh.position.set(victoryBalloon.position.x, victoryBalloon.position.y+2, victoryBalloon.position.z);
+                        camera.position.y += ((victoryBalloon.position.y+10)-camera.position.y)*0.05;
+                        camera.lookAt(victoryBalloon.position.x, victoryBalloon.position.y+5, victoryBalloon.position.z);
+                        if(victoryBalloon.position.y>30) playVictoryVideo();
                     }
                 }
-
                 renderer.render(scene, camera);
             }
             animate();
-
-            window.addEventListener('resize', () => {
-                updateCameraPosition();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            window.addEventListener('resize', ()=>{ updateCam(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
-
         init();
     </script>
 </body>
